@@ -1,0 +1,9 @@
+{
+    "MetaData": {
+        "className": "EmotionRadarWidget",
+        "group": "Analytics",
+        "toolTip": "Radar chart widget for emotion recognition results",
+        "whatsThis": "Displays up to eight emotion probabilities on a configurable radar chart.",
+        "icon": ""
+    }
+}

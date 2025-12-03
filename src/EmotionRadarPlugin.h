@@ -1,11 +1,12 @@
 #pragma once
 
-#include <QDesignerCustomWidgetInterface>
+#include <QtUiPlugin/QDesignerCustomWidgetInterface>
 #include <QObject>
 
+// Qt Designer 插件包装类，用于将 EmotionRadarWidget 暴露到设计器
 class EmotionRadarPlugin : public QObject, public QDesignerCustomWidgetInterface {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDesignerCustomWidgetInterface")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDesignerCustomWidgetInterface" FILE "emotionradarplugin.json")
     Q_INTERFACES(QDesignerCustomWidgetInterface)
 
 public:

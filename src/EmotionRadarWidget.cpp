@@ -5,13 +5,14 @@
 #include <QPainterPath>
 
 namespace {
+// 默认的 8 类表情标签
 QStringList defaultEmotions()
 {
     return {QStringLiteral("Happy"), QStringLiteral("Sad"),   QStringLiteral("Angry"),
             QStringLiteral("Fearful"), QStringLiteral("Disgust"), QStringLiteral("Surprised"),
             QStringLiteral("Neutral"), QStringLiteral("Contempt")};
 }
-}
+} // namespace
 
 EmotionRadarWidget::EmotionRadarWidget(QWidget *parent)
     : QWidget(parent)
@@ -19,7 +20,7 @@ EmotionRadarWidget::EmotionRadarWidget(QWidget *parent)
     , m_values(QVariantList(defaultEmotions().size(), 0.0))
     , m_title(tr("Emotion Radar"))
 {
-    setMinimumSize({200, 200});
+    setMinimumSize({200, 200}); // 给出一个合适的最小值，避免被压缩到太小
 }
 
 QString EmotionRadarWidget::title() const
@@ -107,16 +108,16 @@ void EmotionRadarWidget::setLabels(const QStringList &labels)
         return;
 
     m_labels = labels;
-    m_values = QVariantList(m_labels.size(), 0.0);
-    normalizeValues();
+    m_values = QVariantList(m_labels.size(), 0.0); // 重置值列表，保持长度一致
+    normalizeValues();                              // 归一化数值到合法范围
     update();
     emit labelsChanged();
 }
 
 void EmotionRadarWidget::setValues(const QVariantList &values)
 {
-    m_values = values;
-    normalizeValues();
+    m_values = values;   // 接收原始数值
+    normalizeValues();   // 自动截断到 0~maxValue，并匹配标签长度
     update();
     emit valuesChanged();
 }
@@ -126,7 +127,7 @@ void EmotionRadarWidget::setMaxValue(double maxValue)
     if (qFuzzyCompare(m_maxValue, maxValue) || maxValue <= 0.0)
         return;
     m_maxValue = maxValue;
-    normalizeValues();
+    normalizeValues(); // 数值上限变化后需要重新修正
     update();
     emit maxValueChanged();
 }
@@ -214,21 +215,22 @@ void EmotionRadarWidget::setShowPoints(bool enabled)
 
 void EmotionRadarWidget::setEmotionValue(const QString &emotion, double value)
 {
-    int index = m_labels.indexOf(emotion);
+    int index = m_labels.indexOf(emotion); // 查找对应情绪索引
     if (index < 0)
         return;
 
     if (m_values.size() <= index)
         m_values.resize(m_labels.size());
 
-    m_values[index] = value;
-    normalizeValues();
+    m_values[index] = value; // 写入单个值
+    normalizeValues();       // 归一化
     update();
     emit valuesChanged();
 }
 
 void EmotionRadarWidget::setEmotionScores(const QMap<QString, double> &scores)
 {
+    // 批量写入所有情绪
     for (auto it = scores.constBegin(); it != scores.constEnd(); ++it)
         setEmotionValue(it.key(), it.value());
 }
@@ -238,18 +240,19 @@ void EmotionRadarWidget::paintEvent(QPaintEvent *event)
     Q_UNUSED(event);
 
     QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(rect(), m_backgroundColor);
+    painter.setRenderHint(QPainter::Antialiasing); // 开启抗锯齿
+    painter.fillRect(rect(), m_backgroundColor);   // 绘制背景
 
     const int count = m_labels.size();
     if (count == 0)
         return;
 
-    const QPointF center(width() / 2.0, height() / 2.0 + 10);
-    const double radius = qMax(10.0, qMin(width(), height()) / 2.0 - m_margin);
+    const QPointF center(width() / 2.0, height() / 2.0 + 10);                     // 极坐标中心
+    const double radius = qMax(10.0, qMin(width(), height()) / 2.0 - m_margin);   // 有效半径
     painter.save();
     painter.setPen(QPen(m_gridColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
+    // 绘制同心网格多边形
     for (int i = 1; i <= m_gridLines; ++i) {
         const double r = radius * i / m_gridLines;
         QPolygonF polygon;
@@ -258,6 +261,7 @@ void EmotionRadarWidget::paintEvent(QPaintEvent *event)
         painter.drawPolygon(polygon);
     }
 
+    // 绘制每个维度的径向线
     for (int i = 0; i < count; ++i) {
         painter.drawLine(center, valueToPoint(i, radius, radius) + center);
     }
@@ -271,6 +275,7 @@ void EmotionRadarWidget::paintEvent(QPaintEvent *event)
     painter.setFont(font);
 
     const int labelOffset = 16;
+    // 绘制标签文本
     for (int i = 0; i < count; ++i) {
         QPointF pos = valueToPoint(i, radius + labelOffset, radius) + center;
         QRectF textRect(pos.x() - 40, pos.y() - 12, 80, 24);
@@ -280,15 +285,18 @@ void EmotionRadarWidget::paintEvent(QPaintEvent *event)
 
     painter.save();
     QPolygonF valuePolygon;
+    // 计算每个值的顶点坐标
     for (int i = 0; i < count; ++i) {
         const double value = m_values.value(i, 0.0).toDouble();
         valuePolygon << valueToPoint(i, value, radius) + center;
     }
 
+    // 填充数据区域
     painter.setBrush(m_fillColor);
     painter.setPen(QPen(m_strokeColor, 2));
     painter.drawPolygon(valuePolygon);
 
+    // 绘制节点圆点
     if (m_showPoints) {
         painter.setBrush(m_pointColor);
         painter.setPen(QPen(m_strokeColor, 1));
@@ -315,7 +323,7 @@ void EmotionRadarWidget::normalizeValues()
 
     const int count = m_labels.size();
     if (m_values.size() != count) {
-        QVariantList adjusted(count, 0.0);
+        QVariantList adjusted(count, 0.0); // 确保与标签长度一致
         const int copyCount = qMin(count, m_values.size());
         for (int i = 0; i < copyCount; ++i)
             adjusted[i] = m_values.at(i);
@@ -325,9 +333,9 @@ void EmotionRadarWidget::normalizeValues()
     for (int i = 0; i < count; ++i) {
         double v = m_values.at(i).toDouble();
         if (v < 0.0)
-            v = 0.0;
+            v = 0.0;           // 下限保护
         if (v > m_maxValue)
-            v = m_maxValue;
+            v = m_maxValue;    // 上限保护
         m_values[i] = v;
     }
 }
@@ -338,8 +346,8 @@ QPointF EmotionRadarWidget::valueToPoint(int index, double value, double radius)
     if (count == 0)
         return {};
 
-    const double angle = -M_PI_2 + index * (2 * M_PI / count);
-    const double scaled = (radius * value) / m_maxValue;
-    return {scaled * qCos(angle), scaled * qSin(angle)};
+    const double angle = -M_PI_2 + index * (2 * M_PI / count);    // 从顶部开始顺时针
+    const double scaled = (radius * value) / m_maxValue;          // 线性缩放到半径
+    return {scaled * qCos(angle), scaled * qSin(angle)};          // 转换到平面坐标
 }
 

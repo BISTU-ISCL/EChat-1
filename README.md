@@ -11,6 +11,7 @@
 ## 文件结构
 - `src/EmotionRadarWidget.h/.cpp`：核心雷达图控件实现。
 - `src/EmotionRadarPlugin.h/.cpp`：Qt Designer 插件封装，注册控件以便拖拽使用。
+- `src/emotionradarplugin.json`：Qt 设计器插件的元数据（分组、提示等），Qt6/Qt5 均可识别。
 - `CMakeLists.txt`：同时兼容 Qt 5/6 Widgets + Designer 的构建脚本。
 
 ## 构建与安装（CMake）
@@ -25,6 +26,7 @@ cmake --install . --prefix <安装路径>
 - **Linux/macOS**：将生成的 `emotionradardesigner` 库放入 `${QT_PLUGIN_PATH}/designer/`（或 Qt 安装目录下的相应 `plugins/designer/` 文件夹）。
 - **Windows**：将生成的 `emotionradardesigner.dll` 放到 `C:/Qt/<版本>/plugins/designer/`。
 - 重新启动 Qt Designer，即可在 "Analytics" 分组下找到 `EmotionRadarWidget`，拖入表单后可在属性面板配置颜色、网格、标题等属性。
+- 如果使用 Qt 6，插件通过 `Qt6::UiPlugin` 链接并携带 `emotionradarplugin.json` 元数据，可直接被设计器识别加载；Qt 5 则通过 `Qt5::Designer` 兼容。
 
 ### 代码中直接使用
 ```cpp
@@ -34,6 +36,17 @@ EmotionRadarWidget *radar = new EmotionRadarWidget(parent);
 radar->setEmotionScores({{"Happy", 0.8}, {"Sad", 0.1}});
 radar->setFillColor(QColor("#3fa7ff"));
 radar->setStrokeColor(Qt::blue);
+```
+
+### Demo 示例（QWidget 窗口）
+- 通过 CMake 变量 `BUILD_EMOTION_RADAR_DEMO`（默认 ON）生成示例可执行文件 `emotionradar_demo`。
+- 示例会定时随机刷新 8 个情绪的分数，方便快速验证控件的绘制效果。
+
+```bash
+mkdir -p build && cd build
+cmake .. -DBUILD_EMOTION_RADAR_DEMO=ON
+cmake --build . --target emotionradar_demo
+./emotionradar_demo
 ```
 
 ## 关键属性列表
