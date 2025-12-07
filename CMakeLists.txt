@@ -9,13 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
 
-find_package(Qt6 COMPONENTS Widgets UiPlugin QUIET)
-if (NOT Qt6_FOUND)
-    find_package(Qt5 COMPONENTS Widgets Designer REQUIRED)
-    set(QT_VERSION 5)
-else()
-    set(QT_VERSION 6)
-endif()
+# 本项目针对 Qt 5.15.2 环境优化，直接查找 Qt5 组件，避免因 Qt6 优先导致的设计器兼容性问题
+find_package(Qt5 5.15.2 REQUIRED COMPONENTS Widgets Designer)
 
 set(WIDGET_SOURCES
     src/EmotionRadarWidget.cpp
@@ -23,24 +18,15 @@ set(WIDGET_SOURCES
 
 add_library(emotionradarwidget STATIC ${WIDGET_SOURCES})
 target_include_directories(emotionradarwidget PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-if (QT_VERSION EQUAL 6)
-    target_link_libraries(emotionradarwidget PUBLIC Qt6::Widgets)
-else()
-    target_link_libraries(emotionradarwidget PUBLIC Qt5::Widgets)
-endif()
+target_link_libraries(emotionradarwidget PUBLIC Qt5::Widgets)
 
 set(PLUGIN_SOURCES
     src/EmotionRadarPlugin.cpp
     src/EmotionRadarPlugin.h
     src/emotionradarplugin.json)
 
-if (QT_VERSION EQUAL 6)
-    qt_add_plugin(emotionradardesigner CLASS_NAME EmotionRadarPlugin ${PLUGIN_SOURCES})
-    target_link_libraries(emotionradardesigner PRIVATE emotionradarwidget Qt6::UiPlugin Qt6::Widgets)
-else()
-    add_library(emotionradardesigner SHARED ${PLUGIN_SOURCES})
-    target_link_libraries(emotionradardesigner PRIVATE emotionradarwidget Qt5::Designer Qt5::Widgets)
-endif()
+add_library(emotionradardesigner MODULE ${PLUGIN_SOURCES})
+target_link_libraries(emotionradardesigner PRIVATE emotionradarwidget Qt5::Designer Qt5::Widgets)
 
 target_include_directories(emotionradardesigner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -49,11 +35,7 @@ option(BUILD_EMOTION_RADAR_DEMO "Build demo application" ON)
 if (BUILD_EMOTION_RADAR_DEMO)
     add_executable(emotionradar_demo src/EmotionRadarDemo.cpp)
     target_link_libraries(emotionradar_demo PRIVATE emotionradarwidget)
-    if (QT_VERSION EQUAL 6)
-        target_link_libraries(emotionradar_demo PRIVATE Qt6::Widgets)
-    else()
-        target_link_libraries(emotionradar_demo PRIVATE Qt5::Widgets)
-    endif()
+    target_link_libraries(emotionradar_demo PRIVATE Qt5::Widgets)
 endif()
 
 install(TARGETS emotionradardesigner

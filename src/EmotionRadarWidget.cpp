@@ -1,6 +1,7 @@
 #include "EmotionRadarWidget.h"
 
 #include <QtMath>
+#include <QtGlobal>
 #include <QPainter>
 #include <QPainterPath>
 
@@ -243,14 +244,21 @@ void EmotionRadarWidget::paintEvent(QPaintEvent *event)
     painter.setRenderHint(QPainter::Antialiasing); // 开启抗锯齿
     painter.fillRect(rect(), m_backgroundColor);   // 绘制背景
 
+    // 根据当前窗口尺寸进行自适应缩放，确保缩放时线宽、字体、间距保持视觉一致
+    const double baseSize = 320.0; // 与 sizeHint 对齐的参考尺寸
+    const double scale = qBound(0.6, qMin(width(), height()) / baseSize, 2.4);
+    const double margin = m_margin * scale;
+
     const int count = m_labels.size();
     if (count == 0)
         return;
 
-    const QPointF center(width() / 2.0, height() / 2.0 + 10);                     // 极坐标中心
-    const double radius = qMax(10.0, qMin(width(), height()) / 2.0 - m_margin);   // 有效半径
+    const QPointF center(width() / 2.0, height() / 2.0 + 10 * scale);                   // 极坐标中心
+    const double radius = qMax(10.0, qMin(width(), height()) / 2.0 - margin);           // 有效半径
     painter.save();
-    painter.setPen(QPen(m_gridColor, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
+    const qreal gridPenWidth = qMax<qreal>(1.0, 1.0 * scale);
+    painter.setPen(QPen(m_gridColor, gridPenWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
     // 绘制同心网格多边形
     for (int i = 1; i <= m_gridLines; ++i) {
@@ -272,13 +280,14 @@ void EmotionRadarWidget::paintEvent(QPaintEvent *event)
     painter.setPen(QPen(m_labelColor, 1));
     QFont font = painter.font();
     font.setBold(true);
+    font.setPointSizeF(font.pointSizeF() * scale);
     painter.setFont(font);
 
-    const int labelOffset = 16;
+    const double labelOffset = 16.0 * scale;
     // 绘制标签文本
     for (int i = 0; i < count; ++i) {
         QPointF pos = valueToPoint(i, radius + labelOffset, radius) + center;
-        QRectF textRect(pos.x() - 40, pos.y() - 12, 80, 24);
+        QRectF textRect(pos.x() - 40 * scale, pos.y() - 12 * scale, 80 * scale, 24 * scale);
         painter.drawText(textRect, Qt::AlignCenter, m_labels.value(i));
     }
     painter.restore();
@@ -293,15 +302,15 @@ void EmotionRadarWidget::paintEvent(QPaintEvent *event)
 
     // 填充数据区域
     painter.setBrush(m_fillColor);
-    painter.setPen(QPen(m_strokeColor, 2));
+    painter.setPen(QPen(m_strokeColor, qMax<qreal>(1.0, 2.0 * scale)));
     painter.drawPolygon(valuePolygon);
 
     // 绘制节点圆点
     if (m_showPoints) {
         painter.setBrush(m_pointColor);
-        painter.setPen(QPen(m_strokeColor, 1));
+        painter.setPen(QPen(m_strokeColor, qMax<qreal>(1.0, 1.0 * scale)));
         for (const QPointF &point : valuePolygon)
-            painter.drawEllipse(point, 4, 4);
+            painter.drawEllipse(point, 4 * scale, 4 * scale);
     }
 
     painter.restore();
@@ -310,9 +319,9 @@ void EmotionRadarWidget::paintEvent(QPaintEvent *event)
     painter.setPen(QPen(m_labelColor, 1));
     QFont titleFont = painter.font();
     titleFont.setBold(true);
-    titleFont.setPointSize(titleFont.pointSize() + 2);
+    titleFont.setPointSizeF(titleFont.pointSizeF() * scale + 2);
     painter.setFont(titleFont);
-    painter.drawText(QRectF(0, 0, width(), 24), Qt::AlignCenter, m_title);
+    painter.drawText(QRectF(0, 0, width(), 24 * scale), Qt::AlignCenter, m_title);
     painter.restore();
 }
 

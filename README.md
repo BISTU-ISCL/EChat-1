@@ -1,22 +1,24 @@
 # Emotion Radar Qt 组件
 
-这是一个基于 Qt Widgets 的自定义雷达图控件，专门用来展示 8 类表情识别结果。它提供丰富的属性用于颜色、尺寸、刻度等外观配置，同时提供 Qt Designer 插件，可以拖拽到前面板直接使用，也支持在代码中进行自定义操作（如动态更新分数、修改标签）。
+这是一个基于 Qt Widgets 的自定义雷达图控件，专门用来展示 8 类表情识别结果。它提供丰富的属性用于颜色、尺寸、刻度等外观配置，同时提供 Qt Designer 插件，可以拖拽到前面板直接使用，也支持在代码中进行自定义操作（如动态更新分数、修改标签）。当前版本**针对 Qt 5.15.2** 调优，以确保在该版本的 Qt Designer 中稳定加载。
 
 ## 主要特性
 - 默认 8 类表情（Happy、Sad、Angry、Fearful、Disgust、Surprised、Neutral、Contempt），可自定义标签和数值。
 - 丰富的外观属性：填充颜色、描边颜色、点颜色、网格颜色、背景色、标题、网格线数量、边距、是否显示数据点等。
 - 提供 `setEmotionValue`、`setEmotionScores` 等便捷接口，便于从推理结果直接更新雷达图。
 - Qt Designer 插件，支持在设计器中拖拽使用；同一个核心控件也可以在代码中单独引入。
+- 自适应绘制：线宽、字体、标签间距随控件尺寸缩放，放大/缩小时保持一致的视觉比例。
 
 ## 文件结构
 - `src/EmotionRadarWidget.h/.cpp`：核心雷达图控件实现。
 - `src/EmotionRadarPlugin.h/.cpp`：Qt Designer 插件封装，注册控件以便拖拽使用。
-- `src/emotionradarplugin.json`：Qt 设计器插件的元数据（分组、提示等），Qt6/Qt5 均可识别。
-- `CMakeLists.txt`：同时兼容 Qt 5/6 Widgets + Designer 的构建脚本。
+- `src/emotionradarplugin.json`：Qt 设计器插件的元数据（分组、提示等），Qt5 Designer 可识别。
+- `CMakeLists.txt`：面向 Qt 5.15.2 Widgets + Designer 的构建脚本。
 
 ## 构建与安装（CMake）
 ```bash
 mkdir -p build && cd build
+# 这里假设 Qt 版本为 5.15.2，且 qmake/cmake 工具链指向该版本
 cmake ..
 cmake --build .
 cmake --install . --prefix <安装路径>
@@ -26,7 +28,7 @@ cmake --install . --prefix <安装路径>
 - **Linux/macOS**：将生成的 `emotionradardesigner` 库放入 `${QT_PLUGIN_PATH}/designer/`（或 Qt 安装目录下的相应 `plugins/designer/` 文件夹）。
 - **Windows**：将生成的 `emotionradardesigner.dll` 放到 `C:/Qt/<版本>/plugins/designer/`。
 - 重新启动 Qt Designer，即可在 "Analytics" 分组下找到 `EmotionRadarWidget`，拖入表单后可在属性面板配置颜色、网格、标题等属性。
-- 如果使用 Qt 6，插件通过 `Qt6::UiPlugin` 链接并携带 `emotionradarplugin.json` 元数据，可直接被设计器识别加载；Qt 5 则通过 `Qt5::Designer` 兼容。
+- 本版本以 Qt 5.15.2 为目标环境，插件通过 `Qt5::Designer` 链接并携带 `emotionradarplugin.json` 元数据，可直接被该版本设计器识别加载。
 
 ### 代码中直接使用
 ```cpp
