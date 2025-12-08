@@ -9,8 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
 
-# 本项目针对 Qt 5.15.2 环境优化，直接查找 Qt5 组件，避免因 Qt6 优先导致的设计器兼容性问题
-find_package(Qt5 5.15.2 REQUIRED COMPONENTS Widgets Designer)
+# 本项目针对 Windows 上的 Qt 6.10.0 + MSVC 2022 64-bit Release 环境
+find_package(Qt6 6.10.0 REQUIRED COMPONENTS Widgets Designer)
 
 set(WIDGET_SOURCES
     src/EmotionRadarWidget.cpp
@@ -18,7 +18,7 @@ set(WIDGET_SOURCES
 
 add_library(emotionradarwidget STATIC ${WIDGET_SOURCES})
 target_include_directories(emotionradarwidget PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(emotionradarwidget PUBLIC Qt5::Widgets)
+target_link_libraries(emotionradarwidget PUBLIC Qt6::Widgets)
 
 set(PLUGIN_SOURCES
     src/EmotionRadarPlugin.cpp
@@ -26,7 +26,7 @@ set(PLUGIN_SOURCES
     src/emotionradarplugin.json)
 
 add_library(emotionradardesigner MODULE ${PLUGIN_SOURCES})
-target_link_libraries(emotionradardesigner PRIVATE emotionradarwidget Qt5::Designer Qt5::Widgets)
+target_link_libraries(emotionradardesigner PRIVATE emotionradarwidget Qt6::Designer Qt6::Widgets)
 
 target_include_directories(emotionradardesigner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -35,7 +35,7 @@ option(BUILD_EMOTION_RADAR_DEMO "Build demo application" ON)
 if (BUILD_EMOTION_RADAR_DEMO)
     add_executable(emotionradar_demo src/EmotionRadarDemo.cpp)
     target_link_libraries(emotionradar_demo PRIVATE emotionradarwidget)
-    target_link_libraries(emotionradar_demo PRIVATE Qt5::Widgets)
+    target_link_libraries(emotionradar_demo PRIVATE Qt6::Widgets)
 endif()
 
 install(TARGETS emotionradardesigner
